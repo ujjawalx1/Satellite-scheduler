@@ -86,9 +86,15 @@ Alternatively run `locust -f locustfile.py --host http://localhost:8000` and sel
 
 ## Testing
 
+Run tests locally or directly inside Docker:
+
 ```bash
+# Locally
 pip install -r requirements.txt
-pytest -q
+pytest -v
+
+# Or inside Docker
+docker compose exec api pytest -v
 ```
 
 ## Deployment
