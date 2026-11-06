@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: satellite
+      POSTGRES_USER: satellite
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-satellite-local-only}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U satellite"]
+      interval: 3s
+      retries: 20
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment: &common
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: satellite
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-satellite-local-only}
+      POSTGRES_DB: satellite
+      DATABASE_URL: postgresql+psycopg2://satellite:${POSTGRES_PASSWORD:-satellite-local-only}@db:5432/satellite
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-for-production}
+      STUDENT_PASSWORD: ${STUDENT_PASSWORD:-student-demo-password}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin-demo-password}
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+  worker1:
+    build: .
+    command: python -m app.worker
+    environment:
+      <<: *common
+      WORKER_ID: worker1
+      WORKER_CPU: 4
+      WORKER_MEMORY_MB: 8192
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+  worker2:
+    build: .
+    command: python -m app.worker
+    environment:
+      <<: *common
+      WORKER_ID: worker2
+      WORKER_CPU: 8
+      WORKER_MEMORY_MB: 16384
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+  worker3:
+    build: .
+    command: python -m app.worker
+    environment:
+      <<: *common
+      WORKER_ID: worker3
+      WORKER_CPU: 2
+      WORKER_MEMORY_MB: 4096
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  pgdata:
