@@ -10,6 +10,11 @@ from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, 
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import IntegrityError
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger('satellite')
